@@ -1,25 +1,29 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
- 
-# criar as funções de carregamento de dados
-    # cotações do Itaú - ITUB4 - 2010 a 2025
+
 @st.cache_data
-def carregar_dados(empresa):
-    dados_acao = yf.Ticker(empresa)
-    cotacoes_acao = dados_acao.history(start="2010-01-01", end="2025-12-01")
-    cotacoes_acao = cotacoes_acao[["Close"]]
-    return cotacoes_acao
+def carregar_dados(acoes):
+    cotacoes = yf.download(
+        tickers=acoes,
+        start="2010-01-01",
+        end="2025-12-01"
+    )
+    cotacoes = cotacoes["Close"]  
+    return cotacoes
 
-# prepara as visualizações
-dados = carregar_dados("ITUB4.SA")
-print(dados)
+acoes = ["ITUB4.SA", "PETR4.SA", "MGLU3.SA", "VALE3.SA", "ABEV3.SA", "GGBR4.SA"]
 
+dados = carregar_dados(acoes)
 
-# criar a interface do streamlit
-st.title("Análise de Cotações do Itaú (ITUB4)")
+st.title("Análise de Cotações das Ações")
 
-#criar o grafico
+lista_acoes = st.multiselect("Escolha as ações para visualizar:", dados.columns)
+if lista_acoes:
+    dados = dados[lista_acoes]
+    if len(lista_acoes) == 1:
+        acao_unica = lista_acoes[0]
+        dados = dados.rename(columns={acao_unica: "Close"})
+    
 st.line_chart(dados)
 
-st.write("""##### Este aplicativo exibe as cotações históricas do Itaú (ITUB4) de 2010 a 2025.""")
+st.write("##### Este aplicativo exibe as cotações históricas das ações de 2010 a 2025.")
